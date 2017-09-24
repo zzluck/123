@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+	body,html{
+		width:100%;
+		height:100%;
+		overflow: hidden;
+	}
+		.balloon{
+			position:absolute;
+			width:96px;
+			height:120px;
+			background-image: url("img/balloon.png");
+			background-repeat: no-repeat;
+			z-index: 10;
+			
+		}
+		.blow{
+			animation:boom 0.4s forwards;
+		}
+		@keyframes boom{
+			from{}
+			to{transform:scale(10);opacity:0;}
+		}
+
+		.clound{
+			width:100px;
+			height:50px;
+			position:absolute;
+			background-image:url("img/clound.png");
+			background-repeat:no-repeat;
+			background-size:100% 100%;
+			opacity:0.5;
+			z-index: 9;
+		}
+
+		.score{
+			position: absolute;
+			left:40px;
+			top:40px;
+			font-size: 30px;
+			text-align:center;
+			color:#000;
+		}
+		.addScore{
+			position:absolute;
+			width:50px;
+			height:50px;
+			left:45px;
+			top:45px;
+			font-size:30px;
+			line-height:50px;
+			text-align:center;
+		}
+
+		.gun{
+			width:96px;
+			height:96px;
+			position:absolute;
+			background-image:url("img/gun.png");
+			background-repeat: no-repeat;
+			z-index: 11;
+		}
+	</style>
+</head>
+<body>
+	<!-- <div class="balloon"></div>
+ -->
+	<script> 
+	//创建随机数
+	function getR(m,n){
+		return Math.floor(Math.random()*(n-m)+m);//[m,n)向下取整
+	}
+	//console.info(getR(1,9))
+
+	//气球背景图定位
+	var position = ["0 0","-96px 0","-192px 0","-288px 0",
+						"0 -120px","-96px -120px","-192px -120px","-288px -120px"];
+
+		function Balloon(){
+			// this.mark=getR(1,9);  //[1,9)向下取整
+			var that=this;
+			//创建气球元素
+			this.ele=document.createElement("div");
+			this.ele.className="balloon";
+			
+			document.body.appendChild(this.ele);
+			
+			this.rebirth();
+			// //气球在不同位置生成
+			// this.x=getR(0,document.body.offsetWidth-96);
+			// this.y=getR(document.body.offsetHeight/2,document.body.offsetHeight/2+100);
+			// //console.info(this.y)
+			// this.ele.style.left =this.x + "px";
+			// this.ele.style.top  =this.y + "px";
+
+			//给气球添加点击事件 game中判断爆炸条件
+			// this.ele.addEventListener("click",function(){
+			// 	game.addScore(that.mark);
+			// 	that.ele.className="balloon blow";
+			// });
+
+			//气球爆炸动画结束
+			this.ele.addEventListener("animationend",function(){
+				console.info("动画结束");
+				that.rebirth();
+				that.ele.className="balloon"
+			});
+		}
+
+		Balloon.prototype.rebirth=function(){
+			this.mark=getR(1,9);  //[1,9)向下取整
+			
+			this.ele.style.backgroundPosition=position[this.mark-1];
+
+			//气球在不同位置生成
+			this.x=getR(0,document.body.offsetWidth-96);
+			this.y=getR(document.body.offsetHeight/2,document.body.offsetHeight/2+100);
+			//console.info(this.y)
+			this.ele.style.left =this.x + "px";
+			this.ele.style.top  =this.y + "px";
+
+		}
+
+		Balloon.prototype.move=function(){
+			this.y-= this.mark;
+
+			if(this.y<-120){
+				this.rebirth();
+			}else{
+				this.ele.style.top = this.y + "px";
+			}
+
+		}
+
+		function Clound(){
+			//创建云朵
+			this.ele=document.createElement("span");
+			this.ele.className="clound";
+			document.body.appendChild(this.ele);
+
+			//定位
+			this.x = getR(0,document.body.offsetWidth-100);
+			this.y = getR(10,50);
+			this.speed = getR(1,3);
+			this.ele.style.left = this.x + "px";
+			this.ele.style.top = this.y + "px";
+
+		}
+
+		//云移动
+		Clound.prototype.move = function(){
+			this.x -= this.speed;
+			if(this.x<-100){
+				this.x = getR(document.body.offsetWidth,document.body.offsetWidth+100);
+			}
+			this.ele.style.left=this.x + "px";
+		}
+
+		var bg={
+			imgsrc:"url('img/bg.jpg')",
+			init:function(){
+				document.body.style.backgroundImage=this.imgsrc;
+				document.body.style.backgroundRepeat="no-repeat";
+				document.body.style.backgroundSize="100% 100%";
+			},
+			changeBg:function(newImgsrc){
+				this.imgsrc=newImgsrc;
+				this.init();			
+			}
+
+		}
+
+		var gun={
+			ele:document.createElement("span"),
+			init:function(){
+				this.ele.className="gun";
+				document.body.appendChild(this.ele)
+			},
+			moveto:function(x,y){
+				this.ele.style.left= x - 96/2 + "px";
+				this.ele.style.top= y - 96/2 + "px";
+			}
+		}
+
+		var score={
+			mark:0,
+			ele:document.createElement("span"),
+			init:function(){
+				this.ele.className="score";
+				document.body.appendChild(this.ele);
+				this.ele.innerHTML=this.mark;
+			},
+			add:function(yourscore){
+				this.mark += yourscore;
+				this.ele.innerHTML=this.mark;
+			}
+		}
+
+
+
+		var animateScore={
+			ele:document.createElement('span'),
+			init:function(){
+				this.ele.className="addScore";
+				this.ele.innerHTML="+0";
+				document.body.appendChild(this.ele);
+			},
+			addstart:function(m){
+				this.ele.innerHTML="+"+m;
+			}
+		}
+
+		var game={
+
+			acts:[],
+			amount:3,
+			
+			start:function(){
+				var that=this;
+				var framIndex=0;
+				var currentAmount=0;
+				//创建云朵
+				for(var i=0;i<3;i++){
+					this.acts.push(new Clound());
+				}
+
+				setInterval(function(){
+
+					//产生气球
+					framIndex++;
+					if (framIndex%20==0 && currentAmount<that.amount){
+						currentAmount++;
+						that.acts.push(new Balloon());
+					}
+
+					//演员动起来
+					for(var i=0;i<that.acts.length;i++){
+						that.acts[i].move();
+					}
+					
+				},50);
+
+				//gun移动
+				document.body.addEventListener("mousemove",function(e){
+					gun.moveto(e.pageX,e.pageY);
+				});
+				//加枪声
+				document.body.addEventListener("click",function(e){
+					var a=new Audio("img/gun.mp3");
+					a.play();
+					var currentScore=0
+					//console.info(123);
+					//判断气球爆炸距离
+					for(var i=0;i<that.acts.length;i++){
+						var t=that.acts[i];
+						
+						if(t.hasOwnProperty("mark")){
+							var cx=t.ele.offsetLeft+96/2;
+							var cy=t.ele.offsetTop+96/2;
+							console.info(cx,cy);
+							if( Math.pow(e.pageX-cx,2)+Math.pow(e.pageY-cy,2)<Math.pow(96/2,2) ){
+								console.info("爆炸")
+								 t.ele.className="balloon blow";
+								 //score.add(t.mark);
+								 that.addScore(t.mark);
+								 currentScore +=t.mark;
+								
+								
+							}
+						}
+					}
+					animateScore.addstart(currentScore);
+				})
+
+				//开始游戏添加背景
+				bg.init();
+				score.init();
+				gun.init();
+				animateScore.init();
+
+			},
+			addScore:function(mark){
+				score.add(mark);
+			}
+		}
+
+
+
+
+
+
+		// var r1=document.querySelector(".balloon")
+		// var R1=new Balloon();
+		// var r2=document.querySelector(".balloon")
+		// var R2=new Balloon();
+	</script>
+</body>
+
+</html>
